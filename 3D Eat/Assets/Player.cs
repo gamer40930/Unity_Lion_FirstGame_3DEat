@@ -9,33 +9,31 @@ public class Player : MonoBehaviour
     public float speed = 10;
     [Header("跳躍高度"), Range(1, 5000)]
     public float height;
-    #endregion
+    [Header("漢堡音效")]
+    public AudioClip soundBurger;
+    [Header ("酒音效")]
+    public AudioClip SouondWine;
 
-    ///<summary>
-    /// 是否在地上
-    ///</summary>
+    
 
-    private  bool isGround
-    {
-        get
-        {
-            
-            if (transform.position.y <0.056f ) return true; // 如果 Y 軸 小於 0.051 傳回 true           
-            else return false; // 否則傳回 false
-        }
-    }
     ///<summary>
     /// 旋轉角度
     ///</summary>
     private Vector3 angle;
 
-    private Animator ani;
-    private Rigidbody rig;
-
+    private Animator ani;     // 動畫
+    private Rigidbody rig;    // 剛體
+    private AudioSource aud;  // 喇叭
+    private GameManager gm;   // 遊戲管理器
+    
     ///<summary>
     /// 跳躍力道 : 從 0 慢慢增加
     ///</summary>
     private float jump;
+    #endregion
+
+
+
 
     #region 方法
     ///<summary>
@@ -81,6 +79,19 @@ public class Player : MonoBehaviour
     }
 
     ///<summary>
+    /// 是否在地上
+    ///</summary>
+    private  bool isGround
+    {
+        get
+        {
+            
+            if (transform.position.y <0.056f ) return true; // 如果 Y 軸 小於 0.051 傳回 true           
+            else return false; // 否則傳回 false
+        }
+    }
+
+    ///<summary>
     /// 跳躍 : 判斷在地板上並按下空白鍵跳躍
     ///</summary>
     private void Jump()
@@ -108,9 +119,23 @@ public class Player : MonoBehaviour
     ///<summary>
     /// 碰到道具 : 碰到帶有標籤 "Burger" 的物件
     ///</summary>
-    private void HitProp()
+    private void HitProp(GameObject prop)
     {
+        // print("碰撞到的物件標籤為" + prop.name);
 
+        if (prop.tag == "burger") 
+        {
+            aud.PlayOneShot(soundBurger, 1.2f); // 喇叭.撥放一次音效 (音效片段,音量)
+            Destroy(prop);
+        }
+        else if (prop.tag == "WINE") 
+        {
+            aud.PlayOneShot(SouondWine, 1.2f); 
+            Destroy(prop);
+        }
+
+        gm.GetProp(prop.tag);     //告知 GM 取得道具(將道具標籤傳過去)
+        
     }
 
     #endregion
@@ -123,8 +148,13 @@ public class Player : MonoBehaviour
         // 剛體 = 取得元件
         rig = GetComponent<Rigidbody>();
         ani = GetComponent<Animator>();
-
+        aud = GetComponent<AudioSource>();
+        //FOOT 僅限於場景上只有一個類別存在時使用 (例如GM)
+        //例如 : 場景上只有一個 GameManger 類別時可以使用他來取得
+        gm = FindObjectOfType<GameManager>();
     }
+
+
     // 固定更新頻率事件 : 1 秒 50 禎，使用物理必須在此事件內
     private void FixedUpdate()
     {
@@ -136,5 +166,47 @@ public class Player : MonoBehaviour
     {
         Jump();         // 跳躍建議放在update中 
     }
+
+
+    #region 碰撞事件:沒有勾選 is Trigger (不可穿透物件)
+    // 碰撞事件 : 當物件碰撞時執行一次 (沒有勾選 is Trigger)
+    // collision: 碰到物件的碰撞資訊
+    private void OnCollisionEnter(Collision collision)
+    {
+        
+    }
+    // 碰撞事件 : 當物件碰撞離開時執行一次 (沒有勾選 is Trigger)
+    private void OnCollisionExit(Collision collision)
+    {
+        
+    }
+
+    // 碰撞事件 : 當物件碰撞開始時持續執行執行一次 (沒有勾選 is Trigger)
+    private void OnCollisionStay(Collision collision)
+    {
+        
+    }
+    #endregion
+
+    #region 觸發事件:有勾選 is Trigger (可穿透物件)
+    //觸發事件
+    // 碰撞事件 : 當物件碰撞時執行一次 (有勾選 is Trigger)
+    private void OnTriggerEnter(Collider other)
+    {
+        //碰到道具(碰撞資訊.標籤)
+        HitProp(other.gameObject);   
+    }
+    // 碰撞事件 : 當物件碰撞離開時執行一次 (有勾選 is Trigger)
+    private void OnTriggerExit(Collider other)
+    {
+        
+    }
+    // 碰撞事件 : 當物件碰撞開始時持續執行執行一次 (有勾選 is Trigger)
+    private void OnTriggerStay(Collider other)
+    {
+        
+    }
+    #endregion
+
     #endregion
 }
